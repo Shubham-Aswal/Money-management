@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Spendly.</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            light: '#A78BFA',
+                            DEFAULT: '#8B5CF6', 
+                            dark: '#6D28D9',
+                        },
+                        status: { success: '#10B981', error: '#EF4444', warning: '#F59E0B' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: white; }
+        
+        /* Background Ambience */
+        .bg-ambient {
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(109, 40, 217, 0.05) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.3s ease;
+        }
+        .glass-panel:hover { border-color: rgba(139, 92, 246, 0.2); }
+
+        /* Custom Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 20px; width: 20px;
+            border-radius: 50%; background: #8B5CF6; cursor: pointer;
+            margin-top: -8px; box-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
+            border: 2px solid #fff;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #27272A; border-radius: 2px;
+        }
+
+        /* Animations */
+        .glow-text { text-shadow: 0 0 40px rgba(139, 92, 246, 0.3); }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-ambient min-h-screen pb-20 selection:bg-brand-DEFAULT selection:text-white">
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-brand-DEFAULT flex items-center justify-center transform -rotate-6 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                    <i class="ph-bold ph-lightning text-white text-lg"></i>
+                </div>
+                <span class="font-black text-xl tracking-tight italic">SPENDLY.</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="toggleConfig()" class="p-2 text-gray-400 hover:text-white transition"><i class="ph-bold ph-gear text-xl"></i></button>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-dark to-brand-DEFAULT flex items-center justify-center font-bold text-sm border border-white/10">JD</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONFIG PANEL (Hidden by default) -->
+    <div id="config-panel" class="hidden fixed inset-x-0 top-20 z-40 bg-[#09090b] border-b border-white/10 p-6 shadow-2xl">
+        <div class="max-w-2xl mx-auto grid grid-cols-2 gap-4">
+            <div>
+                <label class="text-xs text-gray-500 uppercase font-bold">Monthly Income</label>
+                <input type="number" id="input-income" value="25000" class="w-full bg-[#18181b] border border-white/10 rounded-lg p-2 text-white mt-1 focus:border-brand-DEFAULT outline-none">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 uppercase font-bold">Fixed Expenses</label>
+                <input type="number" id="input-expenses" value="12000" class="w-full bg-[#18181b] border border-white/10 rounded-lg p-2 text-white mt-1 focus:border-red-500 outline-none">
+            </div>
+        </div>
+        <div class="max-w-2xl mx-auto mt-4 text-right">
+            <button onclick="updateCalculations(); toggleConfig()" class="bg-brand-DEFAULT text-white px-6 py-2 rounded-lg font-bold text-sm">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="pt-32 max-w-7xl mx-auto px-4 lg:px-6 grid lg:grid-cols-3 gap-8">
+        
+        <!-- LEFT COLUMN -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- 1. HERO CARD -->
+            <div class="glass-panel rounded-[2rem] p-8 text-center relative overflow-hidden group animate-fade-in" style="animation-delay: 0.1s">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-DEFAULT/10 rounded-full blur-[80px] pointer-events-none"></div>
+                
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <p class="text-gray-400 font-bold uppercase text-xs tracking-[0.2em]">Today's Safe Limit</p>
+                    <span class="bg-green-500/10 text-green-400 text-[10px] px-2 py-0.5 rounded-full border border-green-500/20 font-bold">+₹120 Rollover</span>
+                </div>
+                
+                <div class="flex items-baseline justify-center gap-1 relative z-10">
+                    <span class="text-4xl text-gray-600 font-bold">₹</span>
+                    <span id="safe-spend-display" class="text-8xl font-black tracking-tighter text-white glow-text transition-all duration-300">0</span>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full max-w-md mx-auto bg-gray-800 h-2 rounded-full mt-8 overflow-hidden relative">
+                    <div id="spend-progress" class="h-full bg-gradient-to-r from-cyan-400 to-brand-DEFAULT rounded-full w-0 transition-all duration-1000"></div>
+                </div>
+
+                <!-- AI Roast Button -->
+                <div class="mt-6 flex flex-col items-center gap-3">
+                    <button onclick="getAiRoast()" id="btn-roast" class="flex items-center gap-2 bg-brand-DEFAULT/10 hover:bg-brand-DEFAULT/20 border border-brand-DEFAULT/30 text-brand-light px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                        <i class="ph-fill ph-sparkles"></i> Get AI Financial Roast
+                    </button>
+                    <div id="ai-roast-box" class="hidden bg-black/40 border border-brand-light/30 p-3 rounded-xl max-w-sm">
+                        <p id="ai-roast-text" class="text-xs text-white italic">Loading savage advice...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. ANALYTICS ROW -->
+            <div class="grid md:grid-cols-2 gap-6 animate-fade-in" style="animation-delay: 0.2s">
+                <!-- Chart -->
+                <div class="glass-panel rounded-[2rem] p-6 flex flex-col items-center">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider w-full mb-4">Breakdown</h3>
+                    <div class="w-48 h-48 relative">
+                        <canvas id="budgetChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-[10px] text-gray-500 uppercase font-bold">Total</span>
+                            <span class="text-xl font-bold text-white">25k</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heatmap -->
+                <div class="glass-panel rounded-[2rem] p-6">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Habits</h3>
+                    <div class="grid grid-cols-7 gap-2" id="heatmap-grid">
+                        <!-- JS Injected -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="space-y-6 animate-fade-in" style="animation-delay: 0.3s">
+            
+            <!-- 3. WEEKEND WARRIOR -->
+            <div class="glass-panel rounded-[2rem] p-6 relative">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="font-bold text-lg flex items-center gap-2 text-white">
+                        <i class="ph-fill ph-coffee text-yellow-500"></i> Weekend Mode
+                    </h2>
+                    <span class="text-[10px] font-bold uppercase text-brand-light bg-brand-light/10 px-2 py-1 rounded border border-brand-light/20">Active</span>
+                </div>
+                
+                <div class="relative mb-6">
+                    <input type="range" id="weekend-slider" min="0" max="100" value="50" class="w-full">
+                    <div class="flex justify-between mt-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        <span>Chill Week</span>
+                        <span class="text-brand-DEFAULT">Wild Weekend</span>
+                    </div>
+                </div>
+
+                <!-- Dynamic Tradeoff Text -->
+                <div class="bg-black/40 rounded-xl p-4 border border-white/5 text-center">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold">Weekday Limit</p>
+                    <p id="weekday-limit-display" class="text-xl font-black text-white mt-1">₹0</p>
+                    <p id="coffee-sacrifice" class="text-xs text-yellow-500 mt-2 hidden">
+                        <i class="ph-fill ph-warning"></i> Sacrificing 2 coffees/day
+                    </p>
+                </div>
+            </div>
+
+            <!-- 4. ACTION BUTTONS -->
+            <div class="space-y-3">
+                <button class="w-full bg-brand-DEFAULT/10 hover:bg-brand-DEFAULT/20 border border-brand-DEFAULT/50 text-brand-DEFAULT py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-plus"></i> Add Expense
+                </button>
+                
+                <!-- Receipt Scanner -->
+                <input type="file" id="receipt-input" class="hidden" accept="image/*">
+                <button onclick="document.getElementById('receipt-input').click()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-camera"></i> Scan Receipt ✨
+                </button>
+            </div>
+
+            <!-- 5. GOALS -->
+            <div class="glass-panel rounded-[2rem] p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest">Target</h3>
+                        <h2 class="text-xl font-black text-white mt-1">Vintage Jeans</h2>
+                    </div>
+                    <div class="bg-cyan-500/10 text-cyan-400 p-2 rounded-lg"><i class="ph-fill ph-trend-up text-xl"></i></div>
+                </div>
+                <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden mb-2">
+                    <div class="h-full bg-gradient-to-r from-cyan-400 to-brand-DEFAULT w-1/4"></div>
+                </div>
+                <div class="flex justify-between text-xs font-bold text-gray-400">
+                    <span>₹400 Saved</span>
+                    <span>₹1,600 Total</span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        // --- CONSTANTS ---
+        // REPLACE WITH YOUR REAL API KEY FOR GEMINI FEATURES
+        const GEMINI_API_KEY = ""; 
+
+        const state = {
+            income: 25000,
+            expenses: 12000,
+            weekendBias: 50,
+            daysInMonth: 30,
+            today: 12
+        };
+
+        // --- DOM ELEMENTS ---
+        const els = {
+            safeSpend: document.getElementById('safe-spend-display'),
+            weekdayLimit: document.getElementById('weekday-limit-display'),
+            slider: document.getElementById('weekend-slider'),
+            progressBar: document.getElementById('spend-progress'),
+            coffeeText: document.getElementById('coffee-sacrifice'),
+            inputs: {
+                income: document.getElementById('input-income'),
+                expenses: document.getElementById('input-expenses')
+            }
+        };
+
+        // --- CORE MATH ---
+        function calculate() {
+            const disposable = Math.max(0, state.income - state.expenses);
+            const daysLeft = state.daysInMonth - state.today;
+            const rollover = 120; // Mocked
+            const goalDeduction = 40; // Mocked (1200 remaining / 30 days)
+
+            // Base Daily Calculation
+            const baseDaily = ((disposable / state.daysInMonth) - goalDeduction + (rollover/daysLeft));
+            
+            // Weekend Warrior Math
+            const multiplier = 1 + (state.weekendBias / 100);
+            const weekday = baseDaily * (1 - (state.weekendBias / 200));
+            const weekend = baseDaily * multiplier;
+
+            // Determine if today is weekend (Mocked as weekday for now)
+            const isWeekend = false; 
+            const todayLimit = isWeekend ? weekend : weekday;
+
+            return { todayLimit, weekday, weekend };
+        }
+
+        function updateUI() {
+            const data = calculate();
+            
+            // Update Numbers
+            els.safeSpend.textContent = Math.floor(data.todayLimit).toLocaleString();
+            els.weekdayLimit.textContent = `₹${Math.floor(data.weekday).toLocaleString()}`;
+            
+            // Update Progress Bar (Visual flair)
+            const percentage = Math.min(100, (data.todayLimit / 500) * 100);
+            els.progressBar.style.width = `${percentage}%`;
+
+            // Coffee Sacrifice Logic
+            if(state.weekendBias > 20) {
+                els.coffeeText.classList.remove('hidden');
+                const cups = Math.floor(state.weekendBias / 20);
+                els.coffeeText.innerHTML = `<i class="ph-fill ph-warning"></i> Sacrificing ${cups} coffees/day`;
+            } else {
+                els.coffeeText.classList.add('hidden');
+            }
+
+            // Update Chart
+            updateChart();
+        }
+
+        // --- CHART.JS ---
+        let budgetChart;
+        function initChart() {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            Chart.defaults.font.family = 'Inter';
+            Chart.defaults.color = '#6B7280';
+            
+            budgetChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fixed Bills', 'Transport', 'Food', 'Safe Spend'],
+                    datasets: [{
+                        data: [state.expenses, 1500, 4000, state.income - state.expenses - 5500],
+                        backgroundColor: ['#EF4444', '#22D3EE', '#F472B6', '#10B981'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    cutout: '80%',
+                    plugins: { legend: { display: false } },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function updateChart() {
+            if(!budgetChart) return;
+            const disposable = state.income - state.expenses;
+            // Simple mock update
+            budgetChart.data.datasets[0].data = [state.expenses, 1500, 4000, disposable - 5500];
+            budgetChart.update();
+        }
+
+        // --- HEATMAP GENERATOR ---
+        function renderHeatmap() {
+            const container = document.getElementById('heatmap-grid');
+            let html = '';
+            for(let i=0; i<30; i++) {
+                const intensity = Math.random();
+                let color = 'bg-gray-800';
+                if(intensity > 0.8) color = 'bg-red-500 shadow-[0_0_5px_#ef4444]';
+                else if(intensity > 0.5) color = 'bg-yellow-500';
+                else if(intensity > 0.2) color = 'bg-green-500/50';
+                
+                html += `<div class="w-full pt-[100%] rounded-md ${color} hover:scale-110 transition cursor-pointer"></div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        // --- EVENTS ---
+        els.slider.addEventListener('input', (e) => {
+            state.weekendBias = parseInt(e.target.value);
+            updateUI();
+        });
+
+        function toggleConfig() {
+            const panel = document.getElementById('config-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        function updateCalculations() {
+            state.income = parseInt(els.inputs.income.value);
+            state.expenses = parseInt(els.inputs.expenses.value);
+            updateUI();
+        }
+
+        // --- GEMINI AI INTEGRATION ---
+        async function getAiRoast() {
+            if(!GEMINI_API_KEY) {
+                alert("Please add your Gemini API Key in the code (Line 245) to use AI features!");
+                return;
+            }
+
+            const box = document.getElementById('ai-roast-box');
+            const text = document.getElementById('ai-roast-text');
+            const btn = document.getElementById('btn-roast');
+            
+            box.classList.remove('hidden');
+            text.textContent = "Analyzing your spending...";
+            btn.disabled = true;
+
+            const prompt = `
+                Roast my financial situation in 1 short sentence (Gen Z slang). 
+                Stats: Income ${state.income}, Fixed Bills ${state.expenses}, Weekend Spending Bias ${state.weekendBias}%.
+            `;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await response.json();
+                text.textContent = data.candidates[0].content.parts[0].text;
+            } catch (e) {
+                text.textContent = "AI is asleep. Try again later.";
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // --- INIT ---
+        initChart();
+        renderHeatmap();
+        updateUI();
+
+    </script>
+</body>
+</html>
