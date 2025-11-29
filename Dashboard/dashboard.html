@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spendly | Hackathon Edition</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            light: '#A78BFA',
+                            DEFAULT: '#8B5CF6',
+                            dark: '#6D28D9',
+                            accent: '#00ff95',
+                            danger: '#ff4b4b',
+                            warning: '#FFB020'
+                        },
+                        dark: {
+                            bg: '#050505',
+                            card: '#0A0A0A',
+                            border: '#1f1f1f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- linking css -->
+     <link rel="stylesheet" href="./dashboard.css">
+</head>
+<body class="bg-ambient text-white flex h-screen w-full">
+
+    <!-- 1. LEFT SIDEBAR -->
+    <aside id="mainSidebar" class="sidebar w-64 h-full flex-col hidden md:flex p-6 justify-between z-50 absolute md:relative">
+        <div>
+            <!-- Logo -->
+            <div class="flex items-center gap-3 mb-10 px-2 cursor-pointer hover:opacity-80 transition" onclick="switchTab('dashboard')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-DEFAULT to-brand-dark flex items-center justify-center text-white font-bold shadow-lg shadow-brand-DEFAULT/30">
+                    <i class="ph-bold ph-wallet text-xl"></i>
+                </div>
+                <div>
+                    <span class="font-black italic text-xl tracking-tight block leading-none">Spendly.</span>
+                    <span class="text-[10px] text-brand-accent uppercase tracking-widest font-bold">Hackathon</span>
+                </div>
+            </div>
+
+            <!-- Nav Links -->
+            <nav class="space-y-2">
+                <p class="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Menu</p>
+                <div class="nav-item active" onclick="switchTab('dashboard')">
+                    <i class="ph-bold ph-squares-four text-lg"></i>
+                    <span class="text-sm font-medium">Dashboard</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('transactions')">
+                    <i class="ph-bold ph-list-dashes text-lg"></i>
+                    <span class="text-sm font-medium">Transactions</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('loans')">
+                    <i class="ph-bold ph-hand-coins text-lg"></i>
+                    <span class="text-sm font-medium">Loans & Debts</span>
+                </div>
+                <!-- GOALS MENU -->
+                <div class="nav-item" onclick="switchTab('goals')">
+                    <i class="ph-bold ph-target text-lg"></i>
+                    <span class="text-sm font-medium">Goals</span>
+                </div>
+                
+                <p class="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-6 mb-2">Community</p>
+                <!-- REMOVED GLOBAL PULSE -->
+                <div class="nav-item" onclick="switchTab('squad-groups')">
+                    <i class="ph-bold ph-users-three text-lg"></i>
+                    <span class="text-sm font-medium">Squad Groups</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('crew')">
+                    <i class="ph-bold ph-users text-lg"></i>
+                    <span class="text-sm font-medium">The Crew</span>
+                </div>
+            </nav>
+        </div>
+
+        <!-- User Profile -->
+        <div class="pt-6 border-t border-white/10">
+            <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition cursor-pointer group" onclick="toggleProfileModal(true)">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-DEFAULT to-brand-light p-[1px]">
+                    <img id="sidebarAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-full h-full rounded-full bg-black">
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-bold text-white group-hover:text-brand-light transition" id="sidebarName">Student Acc</p>
+                    <p class="text-xs text-gray-500">Lvl 4 Saver</p>
+                </div>
+                <button class="text-gray-400 hover:text-white"><i class="ph-bold ph-gear"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2. MAIN CONTENT AREA -->
+    <main class="flex-1 main-scroll relative w-full">
+        <!-- Mobile Header -->
+        <div class="md:hidden flex items-center justify-between p-4 bg-dark-bg/80 backdrop-blur-md sticky top-0 z-40 border-b border-white/5">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-brand-DEFAULT flex items-center justify-center"><i class="ph-bold ph-wallet"></i></div>
+                <span class="font-black italic text-lg">Spendly.</span>
+            </div>
+            <button class="p-2 bg-white/10 rounded-lg text-white" onclick="toggleSidebar()"><i class="ph-bold ph-list text-xl"></i></button>
+        </div>
+
+        <div class="p-6 md:p-10 max-w-7xl mx-auto pb-24">
+            
+            <!-- ===================== PAGE: DASHBOARD ===================== -->
+            <section id="dashboard" class="page-section active">
+                <header class="mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 text-brand-accent mb-1">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-accent opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-accent"></span>
+                            </span>
+                            <p class="text-xs font-bold uppercase tracking-widest" id="liveDateTracker">Nov 30 • 12 Days Left</p>
+                        </div>
+                        <h1 class="text-4xl font-black text-white">Dashboard</h1>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="action-btn" onclick="toggleExpenseModal(true)"><i class="ph-bold ph-plus"></i> Expense</button>
+                    </div>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <!-- Safe to Spend (Main Hero) -->
+                    <div class="md:col-span-8 lg:col-span-8 card-glass p-8 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-80 h-80 bg-brand-DEFAULT/10 blur-[100px] rounded-full group-hover:bg-brand-DEFAULT/20 transition duration-1000"></div>
+                        
+                        <div class="relative z-10 flex flex-col h-full justify-between">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Safe to Spend Today</h3>
+                                    <p class="text-[10px] text-gray-500">Calculated using actual days left in the month</p>
+                                </div>
+                                <div class="px-3 py-1 bg-brand-accent/10 border border-brand-accent/20 rounded-full text-brand-accent text-xs font-bold flex items-center gap-1">
+                                    <i class="ph-bold ph-check-circle"></i> On Track
+                                </div>
+                            </div>
+
+                            <div class="my-6">
+                                <h2 class="text-7xl font-black text-white tracking-tighter" id="safeSpendAmount">₹---</h2>
+                                <div class="flex flex-wrap items-center gap-4 mt-4">
+                                    <div class="flex items-center gap-2 text-sm text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                                        <i class="ph-fill ph-trend-up text-brand-accent"></i>
+                                        <span>+₹120 Rollover</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-sm text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5" id="debtDeductionDisplay" style="display:none">
+                                        <i class="ph-fill ph-arrow-down text-brand-danger"></i>
+                                        <span class="text-brand-danger" id="debtDeductionAmount">-₹0/day Debt</span>
+                                    </div>
+                                    <!-- Goal Deduction Display -->
+                                    <div class="flex items-center gap-2 text-sm text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5" id="goalDeductionDisplay" style="display:none">
+                                        <i class="ph-fill ph-piggy-bank text-brand-warning"></i>
+                                        <span class="text-brand-warning" id="goalDeductionAmount">-₹0/day Goals</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="md:col-span-4 lg:col-span-4 card-glass p-6 flex flex-col relative overflow-hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-white flex items-center gap-2"><i class="ph-bold ph-clock-counter-clockwise text-brand-light"></i> Recent Activity</h3>
+                            <button class="text-xs text-brand-DEFAULT hover:underline" onclick="switchTab('transactions')">View All</button>
+                        </div>
+                        
+                        <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar" id="miniTransactionList">
+                             <!-- Populated by JS -->
+                             <div class="animate-pulse space-y-3">
+                                 <div class="h-10 bg-white/5 rounded-lg w-full"></div>
+                                 <div class="h-10 bg-white/5 rounded-lg w-full"></div>
+                                 <div class="h-10 bg-white/5 rounded-lg w-full"></div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Support -->
+                    <div class="md:col-span-6 card-glass p-6 flex items-center justify-between hover:border-white/20 transition group cursor-pointer" onclick="window.showToast('Support Ticket Created (Demo)')">
+                        <div>
+                            <h3 class="font-bold text-white mb-1 flex items-center gap-2"><i class="ph-fill ph-lifebuoy text-brand-accent"></i> Need Help?</h3>
+                            <p class="text-xs text-gray-400 group-hover:text-gray-300 transition">Contact support for issues with payments or account.</p>
+                        </div>
+                        <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-gray-400 group-hover:text-white group-hover:bg-white/10 transition">
+                            <i class="ph-bold ph-chat-centered-text"></i>
+                        </div>
+                    </div>
+
+                    <!-- Categories Chart (Interactive) -->
+                    <div class="md:col-span-6 card-glass p-6 flex items-center gap-6 cursor-pointer hover:border-brand-DEFAULT transition group" onclick="toggleSpendingDetails(true)">
+                        <div class="h-32 w-32 relative flex-shrink-0">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold text-white group-hover:text-brand-light transition">Spending Split</h3>
+                                <span class="bg-white/10 px-2 py-1 rounded text-[10px] text-gray-400 group-hover:text-white transition"><i class="ph-bold ph-magnifying-glass"></i> Analyze</span>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#8B5CF6]"></span> <span class="text-gray-400">Food (45%)</span></div>
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#00ff95]"></span> <span class="text-gray-400">Transport (30%)</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UNIFIED EXPENSE & BUDGET MODAL -->
+                <div id="expenseModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-6">
+                    <div class="card-glass w-full max-w-md p-6 bg-dark-card border-brand-DEFAULT/50 shadow-2xl shadow-brand-DEFAULT/20 max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-xl">Expense Center</h3>
+                            <button onclick="toggleExpenseModal(false)" class="text-gray-400 hover:text-white"><i class="ph-bold ph-x"></i></button>
+                        </div>
+                        
+                        <!-- Tabs -->
+                        <div class="flex border-b border-white/10 mb-6">
+                            <div class="modal-tab active" onclick="switchModalTab('logExpense', this)">Log Spending</div>
+                            <div class="modal-tab" onclick="switchModalTab('budgetSettings', this)">Budget & Fixed</div>
+                        </div>
+                        
+                        <!-- TAB 1: Log Expense -->
+                        <div id="tab-logExpense">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs text-gray-400 mb-1 block">Merchant / Item</label>
+                                    <input type="text" id="expenseName" placeholder="e.g. Starbucks" class="w-full glass-input p-3 rounded-lg text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400 mb-1 block">Amount (₹)</label>
+                                    <input type="number" id="expenseAmount" placeholder="0" class="w-full glass-input p-3 rounded-lg text-2xl font-bold font-mono">
+                                </div>
+                                
+                                <!-- Sentiment Selection -->
+                                <div>
+                                    <label class="text-xs text-gray-400 mb-1 block">Vibe Check (How do you feel?)</label>
+                                    <div class="flex gap-2">
+                                        <button class="flex-1 py-3 bg-brand-accent/10 text-brand-accent border border-brand-accent/30 rounded-xl text-xs font-bold hover:bg-brand-accent/20 transition flex flex-col items-center gap-1" onclick="setExpenseSentiment('worthy', this)">
+                                            <span class="text-lg">🤩</span> Worthy
+                                        </button>
+                                        <button class="flex-1 py-3 bg-white/5 text-gray-400 border border-white/10 rounded-xl text-xs font-bold hover:bg-white/10 transition flex flex-col items-center gap-1" onclick="setExpenseSentiment('ignore', this)">
+                                            <span class="text-lg">🤷</span> Ignore
+                                        </button>
+                                        <button class="flex-1 py-3 bg-white/5 text-gray-400 border border-white/10 rounded-xl text-xs font-bold hover:bg-white/10 transition flex flex-col items-center gap-1" onclick="setExpenseSentiment('regret', this)">
+                                            <span class="text-lg">💀</span> Regret
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="expenseSentiment" value="ignore">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs text-gray-400 mb-1 block">Category</label>
+                                    <div class="flex gap-2">
+                                        <button class="flex-1 py-2 bg-brand-DEFAULT/20 text-brand-DEFAULT border border-brand-DEFAULT/50 rounded text-xs font-bold focus:ring-2 ring-brand-DEFAULT" onclick="setExpenseCategory('Food', this)">🍔 Food</button>
+                                        <button class="flex-1 py-2 bg-white/5 text-gray-400 border border-white/10 rounded text-xs font-bold hover:bg-white/10" onclick="setExpenseCategory('Transport', this)">🚕 Cab</button>
+                                        <button class="flex-1 py-2 bg-white/5 text-gray-400 border border-white/10 rounded text-xs font-bold hover:bg-white/10" onclick="setExpenseCategory('Shop', this)">🛍️ Shop</button>
+                                    </div>
+                                    <input type="hidden" id="expenseCategory" value="Food">
+                                </div>
+                                <button onclick="saveTransaction()" class="w-full action-btn py-3 text-base mt-4">Add Transaction</button>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: Budget Settings -->
+                        <div id="tab-budgetSettings" style="display: none;">
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="text-xs text-gray-400 mb-1 block uppercase tracking-widest">Total Monthly Income/Budget</label>
+                                    <input type="number" id="monthlyLimitInput" value="30000" class="w-full glass-input p-3 rounded-lg text-lg font-bold">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs text-gray-400 mb-2 block uppercase tracking-widest flex justify-between">
+                                        <span>Fixed Expenses (Rent, Bills)</span>
+                                        <span id="totalFixedDisplay" class="text-white font-bold">₹0</span>
+                                    </label>
+                                    <div id="fixedExpensesList" class="space-y-2 mb-3 max-h-32 overflow-y-auto">
+                                        <!-- Populated by JS -->
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="newExpName" placeholder="Name" class="flex-1 glass-input p-2 rounded text-sm">
+                                        <input type="number" id="newExpAmount" placeholder="₹" class="w-24 glass-input p-2 rounded text-sm">
+                                        <button onclick="addFixedExpense()" class="p-2 bg-brand-DEFAULT rounded text-white hover:bg-brand-dark"><i class="ph-bold ph-plus"></i></button>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-white/5 rounded-xl border border-white/10 space-y-2">
+                                    <p class="text-xs text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2 mb-2">Daily Calculation Preview</p>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-400">Monthly Budget</span>
+                                        <span class="text-white font-bold" id="previewMonthly">₹30,000</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-400">Fixed Expenses</span>
+                                        <span class="text-red-400 font-bold" id="previewFixed">- ₹0</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm pt-2 border-t border-white/5">
+                                        <span class="text-gray-300">Disposable Income</span>
+                                        <span class="text-brand-light font-bold" id="previewDisposable">₹30,000</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-400">Daily Base</span>
+                                        <span class="text-white font-bold" id="previewDailyBase">₹1,000/day</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-400">Active Debt (Daily)</span>
+                                        <span class="text-red-400 font-bold" id="previewDebtDaily">- ₹0/day</span>
+                                    </div>
+                                    <!-- Added Goal Preview -->
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-400">Goal Savings (Daily)</span>
+                                        <span class="text-brand-warning font-bold" id="previewGoalDaily">- ₹0/day</span>
+                                    </div>
+                                    <div class="flex justify-between text-base pt-2 border-t border-white/10 mt-1">
+                                        <span class="text-brand-accent font-bold">Safe Spend Today</span>
+                                        <span class="text-brand-accent font-black text-lg" id="previewFinal">₹1,000</span>
+                                    </div>
+                                </div>
+
+                                <button onclick="saveBudgetSettings()" class="w-full action-btn py-3 text-base">Save & Update</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADDED: Detailed Analysis Modal -->
+                <div id="spendingDetailsModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex-col items-center justify-center p-6">
+                    <div class="card-glass w-full max-w-2xl p-6 bg-dark-card border-brand-DEFAULT/30 shadow-2xl h-[85vh] flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="font-black text-2xl text-white">Analysis 🧠</h3>
+                                <p class="text-xs text-gray-400">Where is your money actually going?</p>
+                            </div>
+                            
+                            <!-- Date Filters -->
+                            <div class="flex gap-2 bg-white/5 p-1 rounded-lg">
+                                <button onclick="applyDateFilter('day')" id="filter-day" class="filter-btn text-xs px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition">Day</button>
+                                <button onclick="applyDateFilter('week')" id="filter-week" class="filter-btn text-xs px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition">Week</button>
+                                <button onclick="applyDateFilter('month')" id="filter-month" class="filter-btn active text-xs px-3 py-1.5 rounded-md bg-brand-DEFAULT text-white shadow-lg transition">Month</button>
+                            </div>
+
+                            <button onclick="toggleSpendingDetails(false)" class="text-gray-400 hover:text-white p-2 bg-white/5 rounded-lg ml-4"><i class="ph-bold ph-x"></i></button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 overflow-hidden">
+                            <!-- Left: Chart & Filters -->
+                            <div class="flex flex-col items-center justify-center">
+                                <div class="w-48 h-48 relative mb-6">
+                                    <canvas id="sentimentChart"></canvas>
+                                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <div class="text-center">
+                                            <p class="text-xs text-gray-500 uppercase">Total</p>
+                                            <p class="text-xl font-bold text-white" id="analysisTotal">₹0</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="w-full space-y-2">
+                                    <button onclick="filterSentiment('worthy')" class="w-full p-3 rounded-xl border border-brand-accent/20 bg-brand-accent/5 hover:bg-brand-accent/10 flex justify-between items-center transition group">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">🤩</span>
+                                            <span class="text-sm font-bold text-brand-accent">Worthy</span>
+                                        </div>
+                                        <span class="text-sm font-bold text-white group-hover:translate-x-1 transition" id="totalWorthy">₹0</span>
+                                    </button>
+                                    <button onclick="filterSentiment('regret')" class="w-full p-3 rounded-xl border border-brand-danger/20 bg-brand-danger/5 hover:bg-brand-danger/10 flex justify-between items-center transition group">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">💀</span>
+                                            <span class="text-sm font-bold text-brand-danger">Regret</span>
+                                        </div>
+                                        <span class="text-sm font-bold text-white group-hover:translate-x-1 transition" id="totalRegret">₹0</span>
+                                    </button>
+                                    <button onclick="filterSentiment('ignore')" class="w-full p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex justify-between items-center transition group">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">🤷</span>
+                                            <span class="text-sm font-bold text-gray-400">Can Ignore</span>
+                                        </div>
+                                        <span class="text-sm font-bold text-white group-hover:translate-x-1 transition" id="totalIgnore">₹0</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right: Transaction List -->
+                            <div class="bg-black/20 rounded-2xl border border-white/5 flex flex-col overflow-hidden">
+                                <div class="p-4 border-b border-white/5 bg-white/5">
+                                    <h4 class="font-bold text-sm text-white" id="drillDownTitle">All Transactions</h4>
+                                </div>
+                                <div class="flex-1 overflow-y-auto p-2 space-y-1" id="drillDownList">
+                                    <!-- Populated by JS -->
+                                    <div class="text-center py-10 text-gray-500 text-xs">Select a category to drill down</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ===================== PAGE: TRANSACTIONS ===================== -->
+            <section id="transactions" class="page-section">
+                <header class="mb-8 flex justify-between items-end">
+                    <h1 class="text-3xl font-black text-white">History</h1>
+                    <div class="flex gap-2 text-sm text-gray-400">
+                        <span class="cursor-pointer hover:text-white">This Month</span>
+                        <span>|</span>
+                        <span class="cursor-pointer hover:text-white">Last Month</span>
+                    </div>
+                </header>
+
+                <!-- NEW: HEATMAP SECTION -->
+                <div class="card-glass p-6 mb-8 border-brand-DEFAULT/30">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="font-bold text-white text-lg">Spending Heatmap</h3>
+                            <p class="text-xs text-gray-400">Visual intensity of your daily expenses</p>
+                        </div>
+                        <div class="flex gap-2 text-[10px] text-gray-500 items-center">
+                            <span>Less</span>
+                            <div class="w-3 h-3 rounded bg-white/5 border border-white/10"></div>
+                            <div class="w-3 h-3 rounded bg-brand-accent/40"></div>
+                            <div class="w-3 h-3 rounded bg-brand-warning/60"></div>
+                            <div class="w-3 h-3 rounded bg-brand-danger"></div>
+                            <span>More</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                        <span class="text-xs text-gray-500 font-bold">S</span>
+                        <span class="text-xs text-gray-500 font-bold">M</span>
+                        <span class="text-xs text-gray-500 font-bold">T</span>
+                        <span class="text-xs text-gray-500 font-bold">W</span>
+                        <span class="text-xs text-gray-500 font-bold">T</span>
+                        <span class="text-xs text-gray-500 font-bold">F</span>
+                        <span class="text-xs text-gray-500 font-bold">S</span>
+                    </div>
+                    <div id="heatmapGrid" class="grid grid-cols-7 gap-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="card-glass overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/5 text-xs text-gray-500 uppercase tracking-wider bg-white/5">
+                                <th class="p-4">Date</th>
+                                <th class="p-4">Merchant</th>
+                                <th class="p-4">Category</th>
+                                <th class="p-4 text-right">Amount</th>
+                                <th class="p-4 text-center">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsList" class="text-sm divide-y divide-white/5">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+             <!-- ===================== PAGE: LOANS ===================== -->
+             <section id="loans" class="page-section">
+                <header class="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-black text-white">Loan Center 💸</h1>
+                        <p class="text-gray-400 text-sm mt-1">Manage who you owe and who owes you.</p>
+                    </div>
+                    <button onclick="toggleLoanModal(true)" class="action-btn">
+                        <i class="ph-bold ph-plus"></i> Add New Debt/Asset
+                    </button>
+                </header>
+
+                <!-- Active Loans List -->
+                <div class="card-glass p-6">
+                     <h3 class="font-bold text-white mb-4">Active Loans & Repayments</h3>
+                     <div id="activeLoansList" class="space-y-3">
+                         <!-- Empty State -->
+                         <div id="noLoansMsg" class="text-center py-8 text-gray-500">
+                             <i class="ph-bold ph-hand-coins text-4xl mb-2 opacity-50"></i>
+                             <p>No active loans. You are free! 🎉</p>
+                         </div>
+                     </div>
+                </div>
+
+                <!-- Add Loan Modal -->
+                <div id="loanModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-6">
+                    <div class="card-glass w-full max-w-sm p-6 bg-dark-card border-brand-DEFAULT/50 shadow-2xl shadow-brand-DEFAULT/20">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-xl">Add New Record</h3>
+                            <button onclick="toggleLoanModal(false)" class="text-gray-400 hover:text-white"><i class="ph-bold ph-x"></i></button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-gray-400 mb-1 block">Type</label>
+                                <div class="flex gap-2">
+                                    <button class="flex-1 py-2 bg-brand-danger/20 text-brand-danger border border-brand-danger/50 rounded hover:bg-brand-danger/30 text-xs font-bold focus:ring-2 ring-brand-danger" onclick="setLoanType('borrow', this)">I Borrowed</button>
+                                    <button class="flex-1 py-2 bg-white/5 text-gray-400 border border-white/10 rounded hover:bg-white/10 text-xs font-bold" onclick="setLoanType('lend', this)">I Lent</button>
+                                </div>
+                                <input type="hidden" id="loanType" value="borrow">
+                            </div>
+                            
+                            <div>
+                                <label class="text-xs text-gray-400 mb-1 block">Person Name</label>
+                                <input type="text" id="loanPerson" placeholder="e.g. Rahul" class="w-full glass-input p-3 rounded-lg text-sm">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-400 mb-1 block">Amount (₹)</label>
+                                    <input type="number" id="loanAmount" placeholder="5000" class="w-full glass-input p-3 rounded-lg text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400 mb-1 block">Duration (Days)</label>
+                                    <input type="number" id="loanDuration" placeholder="10" class="w-full glass-input p-3 rounded-lg text-sm">
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-white/5 rounded border border-white/5">
+                                <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Impact</p>
+                                <p class="text-sm text-gray-300" id="loanImpactCalc">Calculated daily repayment: <span class="font-bold text-white">₹0 / day</span></p>
+                            </div>
+
+                            <button onclick="saveLoan()" class="w-full action-btn py-3 text-base">Save Record</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===================== PAGE: GOALS (NEW) ===================== -->
+            <section id="goals" class="page-section">
+                <header class="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-black text-white">Savings Goals 🎯</h1>
+                        <p class="text-gray-400 text-sm mt-1">Set targets and we'll deduct daily from your budget.</p>
+                    </div>
+                    <button onclick="toggleGoalModal(true)" class="action-btn">
+                        <i class="ph-bold ph-plus"></i> New Goal
+                    </button>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="goalsList">
+                    <!-- Goals will be rendered here -->
+                    <div id="noGoalsMsg" class="col-span-full text-center py-12 text-gray-500">
+                        <i class="ph-bold ph-target text-4xl mb-2 opacity-50"></i>
+                        <p>No active goals. Add one to start saving!</p>
+                    </div>
+                </div>
+
+                <!-- Add Goal Modal -->
+                <div id="goalModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-6">
+                    <div class="card-glass w-full max-w-sm p-6 bg-dark-card border-brand-warning/50 shadow-2xl shadow-brand-warning/20">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-xl">Create Saving Goal</h3>
+                            <button onclick="toggleGoalModal(false)" class="text-gray-400 hover:text-white"><i class="ph-bold ph-x"></i></button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-gray-400 mb-1 block">Goal Name</label>
+                                <input type="text" id="goalName" placeholder="e.g. New Shoes" class="w-full glass-input p-3 rounded-lg text-sm">
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-gray-400 mb-1 block">Total Amount (₹)</label>
+                                <input type="number" id="goalAmount" placeholder="2000" class="w-full glass-input p-3 rounded-lg text-sm">
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-gray-400 mb-1 block">Target Date</label>
+                                <input type="date" id="goalDate" class="w-full glass-input p-3 rounded-lg text-sm">
+                            </div>
+
+                            <div class="p-3 bg-brand-warning/10 rounded border border-brand-warning/20">
+                                <p class="text-[10px] text-brand-warning uppercase tracking-widest mb-1">Budget Impact</p>
+                                <p class="text-sm text-gray-300" id="goalImpactCalc">Daily Deduction: <span class="font-bold text-white">₹0 / day</span></p>
+                            </div>
+
+                            <button onclick="saveGoal()" class="w-full action-btn bg-brand-warning text-black hover:bg-yellow-400 py-3 text-base font-bold border-0">Start Saving</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===================== PAGE: CREW ===================== -->
+            <section id="crew" class="page-section">
+                <h1 class="text-3xl font-black text-white mb-6">The Wall of Shame 💀</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card-glass p-6">
+                        <h3 class="font-bold text-gray-400 text-xs uppercase mb-4">Debt Collectors</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan" class="w-10 h-10 rounded-full bg-gray-800">
+                                    <div><h4 class="text-sm font-bold text-white">Rohan</h4><p class="text-xs text-red-400">Owes you ₹500</p></div>
+                                </div>
+                                <button class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-white transition" onclick="showToast('Rohan nudged! 💀')">💀 Nudge</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===================== PAGE: SQUAD GROUPS ===================== -->
+            <section id="squad-groups" class="page-section">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[80vh]">
+                    
+                    <!-- 1. Groups Sidebar -->
+                    <div class="lg:col-span-1 card-glass p-0 overflow-hidden flex flex-col">
+                        <div class="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                            <h3 class="font-bold text-white">Your Squads</h3>
+                            <button onclick="toggleGroupCreator(true)" class="text-xs bg-brand-DEFAULT hover:bg-brand-dark px-2 py-1 rounded text-white transition"><i class="ph-bold ph-plus"></i></button>
+                        </div>
+                        
+                        <!-- List of Groups -->
+                        <div class="flex-1 overflow-y-auto p-2 space-y-1" id="groupList">
+                            <!-- Static Demo Groups -->
+                            <div class="p-3 bg-brand-DEFAULT/10 border border-brand-DEFAULT/20 rounded-lg cursor-pointer group-item active" id="group-Roommates" onclick="switchGroup('Roommates')">
+                                <div class="flex justify-between items-start">
+                                    <span class="font-bold text-sm text-white">🏠 Roommates</span>
+                                    <span class="text-[10px] text-gray-400">2m ago</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1 truncate">Rohan: I paid for electricity...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Group Chat Area -->
+                    <div class="lg:col-span-3 card-glass flex flex-col relative overflow-hidden">
+                        
+                        <!-- Header with "Raise Contry" -->
+                        <div class="p-4 border-b border-white/5 flex justify-between items-center bg-black/20 backdrop-blur-md z-10">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg">🏠</div>
+                                <div>
+                                    <h3 class="font-bold text-white" id="currentGroupName">Roommates</h3>
+                                    <p class="text-xs text-gray-400">Rohan, Priya, Amit, You</p>
+                                </div>
+                            </div>
+                            <button onclick="toggleContryModal(true)" class="action-btn bg-brand-accent text-white border-brand-accent/50 shadow-brand-accent/20">
+                                <i class="ph-bold ph-receipt"></i> Raise Contry (Split)
+                            </button>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div id="squadChatContainer" class="flex-1 overflow-y-auto p-6 space-y-4 bg-black/20">
+                            <!-- Initial History Loaded by JS -->
+                        </div>
+
+                        <!-- Input Area -->
+                        <div class="p-4 bg-black/40 border-t border-white/10 backdrop-blur-md">
+                            <div class="flex gap-3">
+                                <input type="text" id="squadInput" class="flex-1 glass-input rounded-xl px-4 py-3 text-sm" placeholder="Message your squad...">
+                                <button class="action-btn" onclick="sendSquadChat()">
+                                    <i class="ph-bold ph-paper-plane-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SQUAD MODALS -->
+            <div id="contryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-6">
+                <div class="card-glass w-full max-w-sm p-6 bg-dark-card border-brand-DEFAULT/50 shadow-2xl shadow-brand-DEFAULT/20">
+                    <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-xl">Raise 'Contry' Request</h3><button onclick="toggleContryModal(false)" class="text-gray-400 hover:text-white"><i class="ph-bold ph-x"></i></button></div>
+                    <div class="space-y-4">
+                        <div><label class="text-xs text-gray-400 mb-1 block">What is this for?</label><input type="text" id="splitItem" placeholder="e.g. Domino's Pizza" class="w-full glass-input p-3 rounded-lg text-sm"></div>
+                        <div><label class="text-xs text-gray-400 mb-1 block">Total Amount (₹)</label><input type="number" id="splitAmount" placeholder="0" class="w-full glass-input p-3 rounded-lg text-2xl font-bold font-mono"></div>
+                        <button onclick="submitSplit()" class="w-full action-btn py-3 text-base">Post to Group</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="createGroupModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-6">
+                <div class="card-glass w-full max-w-sm p-6 bg-dark-card">
+                    <h3 class="font-bold text-xl mb-4">Create New Squad</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="newGroupName" placeholder="Group Name (e.g. Goa Trip)" class="w-full glass-input p-3 rounded-lg">
+                        
+                        <!-- ADD MEMBER SECTION -->
+                        <div class="border-t border-white/10 pt-4">
+                            <label class="text-xs text-gray-400 mb-2 block">Add Members</label>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="newMemberName" placeholder="Name" class="flex-1 glass-input p-2 rounded text-sm">
+                                <input type="tel" id="newMemberPhone" placeholder="Phone" class="flex-1 glass-input p-2 rounded text-sm">
+                            </div>
+                            <div class="flex gap-2 mb-2">
+                                <input type="email" id="newMemberEmail" placeholder="Email (Optional)" class="flex-1 glass-input p-2 rounded text-sm">
+                                <button onclick="handleAddMember()" class="p-2 bg-white/10 hover:bg-white/20 rounded text-white"><i class="ph-bold ph-plus"></i></button>
+                            </div>
+                            
+                            <!-- Member List Container -->
+                            <div id="tempMemberList" class="space-y-1 max-h-24 overflow-y-auto">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3 pt-2">
+                            <button onclick="toggleGroupCreator(false)" class="flex-1 py-3 rounded-lg hover:bg-white/5 text-gray-400 text-sm">Cancel</button>
+                            <button onclick="createNewGroup()" class="flex-1 action-btn py-3 text-sm">Create Group</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PROFILE MODAL -->
+            <div id="profileModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-6">
+                <div class="card-glass w-full max-w-sm p-8 bg-dark-card border-brand-DEFAULT/50 shadow-2xl flex flex-col items-center relative">
+                    <button onclick="toggleProfileModal(false)" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph-bold ph-x"></i></button>
+                    
+                    <h3 class="font-bold text-xl mb-6 text-white">Account Settings</h3>
+                    
+                    <!-- Avatar -->
+                    <div class="relative mb-6 group">
+                        <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-brand-DEFAULT to-brand-light p-[2px]">
+                            <img id="modalAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-full h-full rounded-full bg-black">
+                        </div>
+                        <button onclick="randomizeAvatar()" class="absolute bottom-0 right-0 bg-white text-black p-2 rounded-full shadow-lg hover:scale-110 transition"><i class="ph-bold ph-arrows-clockwise"></i></button>
+                    </div>
+                    
+                    <!-- Fields -->
+                    <div class="w-full space-y-4 mb-8">
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">Username</label>
+                            <input type="text" id="profileName" value="Student Acc" class="w-full glass-input p-3 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">Phone Number</label>
+                            <input type="tel" id="profilePhone" value="+91 98765 43210" class="w-full glass-input p-3 rounded-lg text-sm">
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="w-full space-y-3">
+                        <button onclick="saveProfile()" class="w-full action-btn py-3 justify-center">Save Changes</button>
+                        <button onclick="window.showToast('Switch Account (Demo)')" class="w-full py-3 rounded-xl border border-white/10 text-gray-400 hover:bg-white/5 hover:text-white transition text-sm font-bold">Switch Account</button>
+                        <button onclick="window.showToast('Signed Out (Demo)')" class="w-full py-3 rounded-xl bg-brand-danger/10 text-brand-danger hover:bg-brand-danger/20 transition text-sm font-bold">Sign Out</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- JS LOGIC -->
+    <script type="module" src="../backend/dashboard.js">
+        
+    </script>
+</body>
+</html>
