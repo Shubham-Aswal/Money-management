@@ -37,5 +37,5 @@ Contributor Rules :
 <br>
 DO: create branches, pull main, test code
 <br>
-DON’T: commit to main, force push, break flow
+DON’T: commit to main, force push, break flow.
 </h3>
