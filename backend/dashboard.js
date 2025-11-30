@@ -26,7 +26,7 @@ let chatStore = {};        // chatStore[groupName] = [ messageObj, ... ]
 let groupMembers = {};     // groupMembers[groupName] = [ {name, phone, email}, ... ]
 
 // UI state
-let monthlyLimit = 30000;
+let monthlyLimit = 0;
 let dailySpent = 0;
 let currentFilter = "month";
 let currentChatId = "Roommates";
@@ -53,10 +53,11 @@ async function saveState() {
     window.userData.loans = activeLoans || [];
     window.userData.chatGroups = chatStore || {};
     window.userData.groupMembers = groupMembers || {};
+    window.userData.monthlyLimit = monthlyLimit !== undefined ? monthlyLimit : 0; 
 
-    // if sync function exists (provided in dashboard.html), call it
+    // if sync function exists (provided in dashboard.html), call it with the data
     if (typeof window.syncUserData === "function") {
-      await window.syncUserData();
+      await window.syncUserData(window.userData);
     } else {
       console.debug("syncUserData() not available — state updated locally.");
     }
@@ -1046,8 +1047,9 @@ window.addEventListener("firestore-ready", () => {
     fixedExpenses = ud.fixedExpenses || [];
     activeGoals = ud.goals || ud.activeGoals || [];
     activeLoans = ud.loans || ud.activeLoans || [];
-    chatStore = ud.chatGroups || ud.chatGroups || {};
+    chatStore = ud.chatGroups || {};
     groupMembers = ud.groupMembers || {};
+    monthlyLimit = ud.monthlyLimit !== undefined ? ud.monthlyLimit : 0;
 
     // ensure the default group exists
     if (!chatStore["Roommates"]) chatStore["Roommates"] = [];

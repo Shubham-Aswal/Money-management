@@ -85,6 +85,7 @@ async function loadUserDoc(uid) {
     const newUser = {
       name: "User",
       phone: "",
+      email: "",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=default",
       transactions: [],
       fixedExpenses: [],
@@ -92,11 +93,12 @@ async function loadUserDoc(uid) {
       loans: [],
       chatGroups: {},
       groupMembers: {},
-      monthlyLimit: 30000,
+      monthlyLimit: 0,
       createdAt: Date.now()
     };
 
     await setDoc(ref, newUser);
+    console.log("✅ Created new user document in Firestore");
     return newUser;
   }
 
@@ -116,9 +118,12 @@ window.syncUserData = async (data) => {
         return;
     }
 
+    // Use window.userData if data is not provided
+    const dataToSave = data || window.userData || {};
+    
     const userRef = doc(db, "users", window._uid);
-    await setDoc(userRef, data, { merge: true });
-    console.log("✅ Firestore saved:", data);
+    await setDoc(userRef, dataToSave, { merge: true });
+    console.log("✅ Firestore saved:", dataToSave);
 };
 
 
@@ -168,8 +173,5 @@ window.logout = async function () {
   await signOut(auth);
   window.location.href = "../login-page/login.html";
 };
-
-// ONLY this is correct:
-window.syncUserData = syncUserData;
 
 
