@@ -82,59 +82,81 @@
             <!-- Nav Links -->
             <nav class="space-y-2">
                 <p class="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Menu</p>
-                <div class="nav-item active" onclick="switchTab('dashboard')">
-                    <i class="ph-bold ph-squares-four text-lg"></i>
-                    <span class="text-sm font-medium">Dashboard</span>
+
+                <div class="nav-item cursor-pointer p-3 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition"
+                    onclick="switchSection('dashboard')">
+                    <div class="flex items-center gap-3">
+                        <i class="ph-bold ph-squares-four text-lg"></i>
+                        <span class="text-sm font-medium">Dashboard</span>
+                    </div>
                 </div>
-                <div class="nav-item" onclick="switchTab('transactions')">
-                    <i class="ph-bold ph-list-dashes text-lg"></i>
-                    <span class="text-sm font-medium">Transactions</span>
+
+                <div class="nav-item cursor-pointer p-3 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition"
+                    onclick="switchSection('transactions')">
+                    <div class="flex items-center gap-3">
+                        <i class="ph-bold ph-receipt text-lg"></i>
+                        <span class="text-sm font-medium">Transactions</span>
+                    </div>
                 </div>
-                <div class="nav-item" onclick="switchTab('loans')">
-                    <i class="ph-bold ph-hand-coins text-lg"></i>
-                    <span class="text-sm font-medium">Loans & Debts</span>
+
+                <div class="nav-item cursor-pointer p-3 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition"
+                    onclick="switchSection('loans')">
+                    <div class="flex items-center gap-3">
+                        <i class="ph-bold ph-hand-coins text-lg"></i>
+                        <span class="text-sm font-medium">Loans & Debts</span>
+                    </div>
                 </div>
-                <!-- GOALS MENU -->
-                <div class="nav-item" onclick="switchTab('goals')">
-                    <i class="ph-bold ph-target text-lg"></i>
-                    <span class="text-sm font-medium">Goals</span>
+
+                <div class="nav-item cursor-pointer p-3 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition"
+                    onclick="switchSection('goals')">
+                    <div class="flex items-center gap-3">
+                        <i class="ph-bold ph-target text-lg"></i>
+                        <span class="text-sm font-medium">Goals</span>
+                    </div>
                 </div>
 
                 <p class="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-6 mb-2">Community</p>
-                <!-- REMOVED GLOBAL PULSE -->
-                <div class="nav-item" onclick="switchTab('squad-groups')">
-                    <i class="ph-bold ph-users-three text-lg"></i>
-                    <span class="text-sm font-medium">Squad Groups</span>
+
+                <div class="nav-item cursor-pointer p-3 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition"
+                    onclick="switchSection('squad-groups')">
+                    <div class="flex items-center gap-3">
+                        <i class="ph-bold ph-users-three text-lg"></i>
+                        <span class="text-sm font-medium">Squad Groups</span>
+                    </div>
                 </div>
-                <div class="nav-item" onclick="switchTab('crew')">
-                    <i class="ph-bold ph-users text-lg"></i>
-                    <span class="text-sm font-medium">The Crew</span>
+
+                <div class="nav-item cursor-pointer p-3 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition"
+                    onclick="switchSection('crew')">
+                    <div class="flex items-center gap-3">
+                        <i class="ph-bold ph-users text-lg"></i>
+                        <span class="text-sm font-medium">The Crew</span>
+                    </div>
                 </div>
             </nav>
-        </div>
 
-        <!-- User Profile -->
-        <div class="pt-6 border-t border-white/10">
-            <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition cursor-pointer group"
-                onclick="toggleProfileModal(true)">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-DEFAULT to-brand-light p-[1px]">
-                    <img id="sidebarAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-                        class="w-full h-full rounded-full bg-black">
+            <!-- User Profile -->
+            <div class="pt-6 border-t border-white/10">
+                <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition cursor-pointer group"
+                    onclick="toggleProfileModal(true)">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-DEFAULT to-brand-light p-[1px]">
+                        <img id="sidebarAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+                            class="w-full h-full rounded-full bg-black">
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-white group-hover:text-brand-light transition"
+                            id="sidebarName">
+                            Student Acc</p>
+                        <p class="text-xs text-gray-500">Lvl 4 Saver</p>
+                    </div>
+                    <button class="text-gray-400 hover:text-white"><i class="ph-bold ph-gear"></i></button>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-bold text-white group-hover:text-brand-light transition" id="sidebarName">
-                        Student Acc</p>
-                    <p class="text-xs text-gray-500">Lvl 4 Saver</p>
-                </div>
-                <button class="text-gray-400 hover:text-white"><i class="ph-bold ph-gear"></i></button>
             </div>
-        </div>
-        <div class="mt-4 px-2">
-            <button onclick="logout()"
-                class="w-full text-left text-sm text-red-400 hover:text-red-300 py-2 px-3 rounded-lg hover:bg-red-400/10 transition">
-                <i class="ph-bold ph-sign-out mr-2"></i> Logout
-            </button>
-        </div>
+            <div class="mt-4 px-2">
+                <button onclick="logout()"
+                    class="w-full text-left text-sm text-red-400 hover:text-red-300 py-2 px-3 rounded-lg hover:bg-red-400/10 transition">
+                    <i class="ph-bold ph-sign-out mr-2"></i> Logout
+                </button>
+            </div>
 
     </aside>
 
@@ -518,63 +540,105 @@
             </section>
 
             <!-- ===================== PAGE: TRANSACTIONS ===================== -->
-            <section id="transactions" class="page-section">
-                <header class="mb-8 flex justify-between items-end">
-                    <h1 class="text-3xl font-black text-white">History</h1>
-                    <div class="flex gap-2 text-sm text-gray-400">
-                        <span class="cursor-pointer hover:text-white">This Month</span>
-                        <span>|</span>
-                        <span class="cursor-pointer hover:text-white">Last Month</span>
+            <section id="transactions" class="page-section hidden">
+                <header class="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-black text-white">Transaction Center</h1>
+                        <p class="text-xs text-gray-400">Track, Analyze, and Log your daily spending.</p>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest bg-white/5 p-2 rounded-lg border border-white/5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Safe
+                        <span class="w-2 h-2 rounded-full bg-yellow-500 ml-2"></span> Close
+                        <span class="w-2 h-2 rounded-full bg-red-500 ml-2"></span> Danger
                     </div>
                 </header>
 
-                <!-- NEW: HEATMAP SECTION -->
-                <div class="card-glass p-6 mb-8 border-brand-DEFAULT/30">
+                <div class="card-glass p-6 mb-8 border border-white/10 rounded-2xl">
                     <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h3 class="font-bold text-white text-lg">Spending Heatmap</h3>
-                            <p class="text-xs text-gray-400">Visual intensity of your daily expenses</p>
-                        </div>
-                        <div class="flex gap-2 text-[10px] text-gray-500 items-center">
-                            <span>Less</span>
-                            <div class="w-3 h-3 rounded bg-white/5 border border-white/10"></div>
-                            <div class="w-3 h-3 rounded bg-brand-accent/40"></div>
-                            <div class="w-3 h-3 rounded bg-brand-warning/60"></div>
-                            <div class="w-3 h-3 rounded bg-brand-danger"></div>
-                            <span>More</span>
-                        </div>
+                        <h3 class="font-bold text-white text-lg">Spending Intensity</h3>
+                        <div class="text-xs text-gray-500" id="heatmapMonthLabel">Current Month</div>
                     </div>
 
-                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
-                        <span class="text-xs text-gray-500 font-bold">S</span>
-                        <span class="text-xs text-gray-500 font-bold">M</span>
-                        <span class="text-xs text-gray-500 font-bold">T</span>
-                        <span class="text-xs text-gray-500 font-bold">W</span>
-                        <span class="text-xs text-gray-500 font-bold">T</span>
-                        <span class="text-xs text-gray-500 font-bold">F</span>
-                        <span class="text-xs text-gray-500 font-bold">S</span>
+                    <div class="grid grid-cols-7 gap-1 text-center mb-2 opacity-50">
+                        <span class="text-[10px]">S</span><span class="text-[10px]">M</span><span
+                            class="text-[10px]">T</span><span class="text-[10px]">W</span><span
+                            class="text-[10px]">T</span><span class="text-[10px]">F</span><span
+                            class="text-[10px]">S</span>
                     </div>
                     <div id="heatmapGrid" class="grid grid-cols-7 gap-2">
-                        <!-- Populated by JS -->
                     </div>
                 </div>
 
-                <div class="card-glass overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr
-                                class="border-b border-white/5 text-xs text-gray-500 uppercase tracking-wider bg-white/5">
-                                <th class="p-4">Date</th>
-                                <th class="p-4">Merchant</th>
-                                <th class="p-4">Category</th>
-                                <th class="p-4 text-right">Amount</th>
-                                <th class="p-4 text-center">Receipt</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionsList" class="text-sm divide-y divide-white/5">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
+                <div
+                    class="card-glass p-6 mb-8 border border-brand-DEFAULT/30 shadow-lg shadow-brand-DEFAULT/5 relative overflow-hidden">
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-brand-DEFAULT/10 blur-[50px] rounded-full pointer-events-none">
+                    </div>
+
+                    <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="ph-bold ph-plus-circle text-brand-light"></i> Quick Add Record
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                        <div class="md:col-span-4">
+                            <label class="text-[10px] uppercase text-gray-500 font-bold mb-1 block">Item /
+                                Merchant</label>
+                            <input type="text" id="quickExpenseName" placeholder="e.g. Uber, McD"
+                                class="w-full bg-white/5 border border-white/10 text-white text-sm rounded-lg p-3 focus:border-brand-accent focus:outline-none transition">
+                        </div>
+
+                        <div class="md:col-span-3">
+                            <label class="text-[10px] uppercase text-gray-500 font-bold mb-1 block">Amount</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-3 text-gray-400">₹</span>
+                                <input type="number" id="quickExpenseAmount" placeholder="0"
+                                    class="w-full bg-white/5 border border-white/10 text-white text-sm rounded-lg p-3 pl-7 focus:border-brand-accent focus:outline-none transition font-mono font-bold">
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-3">
+                            <label class="text-[10px] uppercase text-gray-500 font-bold mb-1 block">Category</label>
+                            <select id="quickExpenseCategory"
+                                class="w-full bg-white/5 border border-white/10 text-gray-300 text-sm rounded-lg p-3 focus:border-brand-accent focus:outline-none transition appearance-none cursor-pointer">
+                                <option value="Food">🍔 Food</option>
+                                <option value="Transport">🚕 Transport</option>
+                                <option value="Shopping">🛍️ Shopping</option>
+                                <option value="Entertainment">🎬 Fun</option>
+                                <option value="Bills">🧾 Bills</option>
+                            </select>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <button onclick="addQuickExpense()"
+                                class="w-full bg-brand-DEFAULT hover:bg-brand-dark text-white font-bold py-3 px-4 rounded-lg transition transform active:scale-95 shadow-lg shadow-brand-DEFAULT/20 flex items-center justify-center gap-2">
+                                <i class="ph-bold ph-check"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-glass overflow-hidden border border-white/5">
+                    <div class="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                        <h4 class="font-bold text-sm text-gray-300">Detailed Logs</h4>
+                        <button class="text-xs text-brand-light hover:text-white" onclick="renderFullTransactions()"><i
+                                class="ph-bold ph-arrows-clockwise"></i> Refresh</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs text-gray-500 uppercase tracking-wider bg-black/20">
+                                    <th class="p-4 font-medium">Date</th>
+                                    <th class="p-4 font-medium">Merchant</th>
+                                    <th class="p-4 font-medium">Category</th>
+                                    <th class="p-4 text-right font-medium">Amount</th>
+                                    <th class="p-4 text-center font-medium">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullTransactionsList" class="text-sm divide-y divide-white/5">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
@@ -934,7 +998,7 @@
 
     <!-- JS LOGIC -->
     <script type="module" src="../backend/firebase-init.js"></script>
-<script type="module" src="../backend/dashboard.js"></script>
+    <script type="module" src="../backend/dashboard.js"></script>
 
 
 </body>

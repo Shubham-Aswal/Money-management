@@ -106,46 +106,147 @@ function updateDateTracker() {
   return daysLeft || 1;
 }
 
-// ---------- HEATMAP ----------
-function renderHeatmap() {
-  const grid = document.getElementById("heatmapGrid");
-  if (!grid) return;
+// ---------- connecting ----------
+// ---------- NAVIGATION LOGIC ----------
+function switchSection(sectionId) {
+    const sections = ['dashboard', 'transactions', 'loans', 'goals', 'squad-groups', 'crew'];
 
-  grid.innerHTML = "";
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const startDay = new Date(year, month, 1).getDay();
+    sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('hidden');      // Tailwind hide
+            el.classList.remove('active');   // Custom CSS hide
+            el.style.display = 'none';       // Force hide
+        }
+    });
 
-  const spendingMap = {};
-  transactions.forEach((tx) => {
-    const d = new Date(tx.timestamp || tx.date ? tx.timestamp || Date.now() : Date.now());
-    if (d.getMonth() === month && d.getFullYear() === year) {
-      const dayKey = d.getDate();
-      spendingMap[dayKey] = (spendingMap[dayKey] || 0) + (tx.amount || 0);
+    const target = document.getElementById(sectionId);
+    if (target) {
+        target.classList.remove('hidden');   // Tailwind show
+        target.classList.add('active');      // Custom CSS show
+        target.style.display = 'block';      // Force show
+
+        // Refresh data if opening Transactions
+        if (sectionId === 'transactions') {
+            // Slight delay to ensure element is visible before calculating chart sizes
+            setTimeout(() => {
+                if (typeof renderHeatmap === 'function') renderHeatmap();
+                if (typeof renderFullTransactions === 'function') renderFullTransactions();
+            }, 10);
+        }
     }
-  });
+}
 
-  for (let i = 0; i < startDay; i++) {
-    const empty = document.createElement("div");
-    empty.className = "heatmap-cell";
-    grid.appendChild(empty);
-  }
+// ---------- HEATMAP LOGIC ----------
+function renderHeatmap() {
+    const grid = document.getElementById("heatmapGrid");
+    if (!grid) return;
 
-  for (let i = 1; i <= daysInMonth; i++) {
-    const amount = spendingMap[i] || 0;
-    let colorClass = "bg-white/5 border border-white/5";
-    if (amount > 0) colorClass = "bg-brand-accent/40 border border-brand-accent/50";
-    if (amount >= 500) colorClass = "bg-brand-warning/60 border border-brand-warning/50";
-    if (amount >= 2000) colorClass = "bg-brand-danger border border-brand-danger/50";
-    const cell = document.createElement("div");
-    cell.className = `heatmap-cell ${colorClass}`;
-    cell.innerText = i;
-    cell.title = `Day ${i}: ₹${amount}`;
-    cell.onclick = () => window.showToast(`Day ${i}: Spent ₹${amount}`);
-    grid.appendChild(cell);
-  }
+    grid.innerHTML = "";
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // 1. Calculate Daily Safe Limit 
+    // (Formula: (MonthlyLimit - FixedExpenses) / DaysInMonth)
+    const limit = window.userData.monthlyLimit || 0;
+    const fixed = (window.userData.fixedExpenses || []).reduce((sum, item) => sum + item.amount, 0);
+    const safeDailyLimit = (limit - fixed) / daysInMonth;
+
+    // 2. Aggregate spending per day
+    const spendingMap = {};
+    (window.userData.transactions || []).forEach((tx) => {
+        const d = new Date(tx.timestamp);
+        if (d.getMonth() === month && d.getFullYear() === year) {
+            const dayKey = d.getDate();
+            spendingMap[dayKey] = (spendingMap[dayKey] || 0) + (tx.amount || 0);
+        }
+    });
+
+    // 3. Render the Grid
+    for (let i = 1; i <= daysInMonth; i++) {
+        const spent = spendingMap[i] || 0;
+        let colorClass = "bg-white/5 border-white/10 text-gray-500"; // Default (Empty)
+
+        if (spent > 0) {
+            if (spent <= safeDailyLimit) {
+                // UNDER BUDGET (Green)
+                colorClass = "bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]";
+            } else if (spent > safeDailyLimit && spent <= (safeDailyLimit * 1.2)) {
+                // NEAR LIMIT (Yellow - within 20% overage)
+                colorClass = "bg-yellow-500/20 border-yellow-500/50 text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.2)]";
+            } else {
+                // EXCEEDED LIMIT (Red)
+                colorClass = "bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]";
+            }
+        }
+
+        const cell = document.createElement("div");
+        cell.className = `heatmap-cell ${colorClass} h-10 w-full rounded-md border flex items-center justify-center text-xs font-bold cursor-pointer transition hover:scale-110`;
+        cell.innerText = i;
+        cell.title = `Day ${i}: ₹${spent} / Safe: ₹${Math.round(safeDailyLimit)}`;
+        cell.onclick = () => window.showToast(`Day ${i}: Spent ₹${spent}`);
+        
+        grid.appendChild(cell);
+    }
+}
+
+// ---------- QUICK ADDER ----------
+async function addQuickExpense() {
+    const nameInput = document.getElementById("quickExpenseName");
+    const amtInput = document.getElementById("quickExpenseAmount");
+    const catInput = document.getElementById("quickExpenseCategory");
+
+    if (!nameInput.value || !amtInput.value) {
+        window.showToast("Please enter item and amount!");
+        return;
+    }
+
+    const amount = parseInt(amtInput.value);
+    
+    // Add to Global State
+    const newTx = {
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        timestamp: Date.now(),
+        merchant: nameInput.value,
+        category: catInput.value,
+        amount: amount,
+        sentiment: "neutral" // Default
+    };
+
+    window.userData.transactions.unshift(newTx);
+    
+    // Reset Inputs
+    nameInput.value = "";
+    amtInput.value = "";
+
+    // Refresh UI
+    renderHeatmap();
+    renderFullTransactions();
+    window.showToast(`Added ₹${amount}`);
+    
+    // Save to Database
+    await saveState();
+}
+
+// ---------- RENDER LIST ----------
+function renderFullTransactions() {
+    const list = document.getElementById("fullTransactionsList");
+    if (!list) return;
+    list.innerHTML = "";
+
+    (window.userData.transactions || []).forEach(tx => {
+        const row = document.createElement("tr");
+        row.className = "hover:bg-white/5 transition";
+        row.innerHTML = `
+            <td class="px-6 py-4 text-gray-400 whitespace-nowrap">${tx.date}</td>
+            <td class="px-6 py-4 font-bold text-white">${tx.merchant}</td>
+            <td class="px-6 py-4"><span class="px-2 py-1 bg-white/10 rounded text-xs text-gray-300 border border-white/10">${tx.category}</span></td>
+            <td class="px-6 py-4 text-right font-bold text-red-400">-₹${tx.amount}</td>
+        `;
+        list.appendChild(row);
+    });
 }
 
 // ---------- PROFILE ----------
@@ -724,8 +825,14 @@ function updateBudgetPreview(totalFixed) {
   const limit = limitInput ? parseInt(limitInput.value) || 0 : monthlyLimit || 0;
   const disposable = limit - totalFixed;
 
-  const daysRemaining = updateDateTracker();
-  const dailyBase = Math.floor(disposable / daysRemaining);
+  // --- BUG FIX START ---
+  // We use the full days in the month (e.g., 31) to calculate the daily base,
+  // rather than the days remaining.
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  
+  const dailyBase = Math.floor(disposable / daysInMonth);
+  // --- BUG FIX END ---
 
   let dailyDebt = 0;
   activeLoans.forEach((l) => { if (l.type === "borrow") dailyDebt += l.daily; });
@@ -733,12 +840,16 @@ function updateBudgetPreview(totalFixed) {
   let dailyGoal = 0;
   activeGoals.forEach((g) => (dailyGoal += g.daily));
 
+  // Calculate final safe spend for the preview
   const finalDaily = Math.max(0, dailyBase - dailyDebt - dailyGoal - dailySpent);
 
   if (document.getElementById("previewMonthly")) document.getElementById("previewMonthly").innerText = `₹${limit}`;
   if (document.getElementById("previewFixed")) document.getElementById("previewFixed").innerText = `- ₹${totalFixed}`;
   if (document.getElementById("previewDisposable")) document.getElementById("previewDisposable").innerText = `₹${disposable}`;
+  
+  // Update the Daily Base text
   if (document.getElementById("previewDailyBase")) document.getElementById("previewDailyBase").innerText = `₹${dailyBase}/day`;
+  
   if (document.getElementById("previewDebtDaily")) document.getElementById("previewDebtDaily").innerText = `- ₹${dailyDebt}/day`;
   if (document.getElementById("previewFinal")) document.getElementById("previewFinal").innerText = `₹${finalDaily}`;
 }
@@ -765,8 +876,19 @@ function recalculateDashboard() {
   let totalFixed = 0;
   fixedExpenses.forEach((e) => (totalFixed += e.amount));
   const disposable = monthlyLimit - totalFixed;
-  const daysRemaining = updateDateTracker();
-  const dailyBase = Math.floor(disposable / daysRemaining);
+
+  // --- BUG FIX START ---
+  // We now calculate the TOTAL days in the current month (28, 29, 30, or 31)
+  // instead of using 'daysRemaining' which caused the logic error on the last day.
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  // Update the UI text for the date, but we ignore its return value for the math now
+  updateDateTracker();
+
+  // Apply User Formula: (MonthlyDisposable / TotalDaysInMonth)
+  const dailyBase = Math.floor(disposable / daysInMonth);
+  // --- BUG FIX END ---
 
   let dailyDebt = 0;
   activeLoans.forEach((l) => { if (l.type === "borrow") dailyDebt += l.daily; });
@@ -1066,4 +1188,9 @@ window.addEventListener("firestore-ready", () => {
 window.saveState = saveState;
 window.initApp = initApp;
 window.recalculateDashboard = recalculateDashboard;
+// Expose the new Transaction Center functions to the HTML
+window.switchSection = switchSection;
+window.renderHeatmap = renderHeatmap;
+window.renderFullTransactions = renderFullTransactions;
+window.addQuickExpense = addQuickExpense;
 
